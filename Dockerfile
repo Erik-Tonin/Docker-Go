@@ -1,22 +1,18 @@
-FROM golang:latest
 
-ENV APP_NAME app
-ENV PORT 8080
+FROM golang:latest as builder
 
-WORKDIR /go/src/${APP_NAME}
+WORKDIR /go/src/app
 
-COPY . /go/src/${APP_NAME}
+COPY . .
 
-RUN CGO_ENABLED=0 go build -o ${APP_NAME}
+RUN CGO_ENABLED=0 go build -o app && chmod +x app
 
 FROM scratch
 
-ENV PORT 8080
-
 WORKDIR /app
 
-COPY --from=builder /go/src/${APP_NAME}/${APP_NAME} .
+COPY --from=builder /go/src/app/app .
 
-EXPOSE ${PORT}
+EXPOSE 8080
 
 CMD ["./app"]
