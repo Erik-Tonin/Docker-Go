@@ -1,18 +1,25 @@
+# Primeiro estágio: Construa o aplicativo usando TinyGo
+FROM tinygo/tinygo:0.29.0 AS builder
 
-FROM golang:latest as builder
+WORKDIR /workspace
 
-WORKDIR /go/src/app
+# Copie os arquivos de código-fonte para o diretório de trabalho
+COPY golang/ .
 
-COPY . .
+ENV GOOS=linux
+ENV GOARCH=386
 
-RUN CGO_ENABLED=0 go build -o app && chmod +x app
+# Compile o aplicativo usando o TinyGo e gera o binário no diretório de trabalho
+RUN tinygo build -o /tmp/full
+#build -ldflags=-compressdwarf=false
 
-FROM scratch
+# Segundo estágio: Crie a imagem final
+FROM rancher/busybox:1.31.1
 
 WORKDIR /app
 
-COPY --from=builder /go/src/app/app .
+# Copie o binário do aplicativo TinyGo do primeiro estágio
+COPY --from=builder /tmp/full .
 
-EXPOSE 8080
-
-CMD ["./app"]
+# Defina o comando de execução
+CMD ["./full"]
